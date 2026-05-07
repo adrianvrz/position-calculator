@@ -32,8 +32,8 @@
             <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-500 uppercase ml-1">Activo Perpetuo</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <button id="btnBTC" onclick="selectAsset('BTC')" class="selector-btn btn-active">BTC</button>
-                    <button id="btnETH" onclick="selectAsset('ETH')" class="selector-btn">ETH</button>
+                    <button id="btnBTC" onclick="selectAsset('BTC')" class="selector-btn btn-active" data-group="asset">BTC</button>
+                    <button id="btnETH" onclick="selectAsset('ETH')" class="selector-btn" data-group="asset">ETH</button>
                 </div>
             </div>
             <div class="flex flex-col gap-2">
@@ -57,8 +57,8 @@
             <div class="col-span-2">
                 <label class="text-xs font-bold text-slate-500 uppercase ml-1">Dirección del Trade</label>
                 <div class="grid grid-cols-2 gap-2 mt-1">
-                    <button id="btnLong" onclick="selectSide('long')" class="selector-btn">LONG (Compra)</button>
-                    <button id="btnShort" onclick="selectSide('short')" class="selector-btn btn-active">SHORT (Venta)</button>
+                    <button id="btnLong" onclick="selectSide('long')" class="selector-btn" data-group="side">LONG (Compra)</button>
+                    <button id="btnShort" onclick="selectSide('short')" class="selector-btn btn-active" data-group="side">SHORT (Venta)</button>
                 </div>
             </div>
 
@@ -71,15 +71,15 @@
         <div class="mb-8">
             <label class="text-xs font-bold text-slate-500 uppercase ml-1">Estrategia & Apalancamiento</label>
             <div class="grid grid-cols-3 gap-2 mt-1">
-                <button id="btn5x" onclick="selectLeverage(5)" class="selector-btn">
+                <button id="btn5x" onclick="selectLeverage(5)" class="selector-btn" data-group="leverage">
                     <span class="block text-lg">5x</span>
                     <span class="text-[9px] opacity-60">Swing</span>
                 </button>
-                <button id="btn25x" onclick="selectLeverage(25)" class="selector-btn">
+                <button id="btn25x" onclick="selectLeverage(25)" class="selector-btn" data-group="leverage">
                     <span class="block text-lg">25x</span>
                     <span class="text-[9px] opacity-60">Intra</span>
                 </button>
-                <button id="btn50x" onclick="selectLeverage(50)" class="selector-btn btn-active">
+                <button id="btn50x" onclick="selectLeverage(50)" class="selector-btn btn-active" data-group="leverage">
                     <span class="block text-lg">50x</span>
                     <span class="text-[9px] opacity-60">Scalp</span>
                 </button>
@@ -125,27 +125,26 @@
         let currentLeverage = 50;
 
         // --- Manejo de UI Activa ---
-        function updateUI(groupId, activeId) {
-            const container = document.getElementById(activeId).parentElement;
-            const buttons = container.querySelectorAll('button');
+        function updateUI(groupName, activeId) {
+            const buttons = document.querySelectorAll(`button[data-group="${groupName}"]`);
             buttons.forEach(btn => btn.classList.remove('btn-active'));
             document.getElementById(activeId).classList.add('btn-active');
         }
 
         function selectAsset(asset) {
             currentAsset = asset;
-            updateUI('assetGroup', `btn${asset}`);
+            updateUI('asset', `btn${asset}`);
             updateEntryPriceInput();
         }
 
         function selectSide(side) {
             currentSide = side;
-            updateUI('sideGroup', side === 'short' ? 'btnShort' : 'btnLong');
+            updateUI('side', side === 'short' ? 'btnShort' : 'btnLong');
         }
 
         function selectLeverage(lev) {
             currentLeverage = lev;
-            updateUI('levGroup', `btn${lev}x`);
+            updateUI('leverage', `btn${lev}x`);
         }
 
         function updateEntryPriceInput() {
@@ -195,8 +194,8 @@
                 maxStopPrice = entry * (1 - maxDistPerc);
             }
 
-            const posSizeUSD = riskUSD * currentLeverage;
-            const lotAsset = posSizeUSD / entry;
+            const lotAsset = riskUSD / (entry * maxDistPerc);
+            const posSizeUSD = lotAsset * entry;
 
             // Mostrar resultados
             document.getElementById('results').classList.remove('hidden');
