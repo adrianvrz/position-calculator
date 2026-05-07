@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Risk Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">📊 Risk Calculator Pro</h1>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm text-slate-400">Capital Total (USDT)</label>
+                <input type="number" id="capital" value="1000" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400">% Riesgo</label>
+                    <input type="number" id="riskPerc" value="1" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400">Operación</label>
+                    <select id="side" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
+                        <option value="short">SHORT (Venta)</option>
+                        <option value="long">LONG (Compra)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400">Precio Entrada</label>
+                    <input type="number" id="entry" value="82193" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400">Stop Loss</label>
+                    <input type="number" id="stop" value="84000" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
+                </div>
+            </div>
+
+            <button onclick="calculate()" class="w-full bg-blue-600 hover:bg-blue-500 transition-colors font-bold py-3 rounded-lg mt-4">
+                CALCULAR ENTRADA
+            </button>
+        </div>
+
+        <div id="results" class="hidden mt-8 space-y-3 border-t border-slate-700 pt-6">
+            <div class="flex justify-between">
+                <span class="text-slate-400">Dinero en riesgo:</span>
+                <span id="resRiskCash" class="font-bold text-red-400">--</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Tamaño Posición (USD):</span>
+                <span id="resPosSize" class="font-bold text-blue-300">--</span>
+            </div>
+            <div class="flex justify-between text-lg">
+                <span class="text-slate-400">Lote (BTC):</span>
+                <span id="resLot" class="font-bold text-green-400">--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Obtener valores
+            const capital = parseFloat(document.getElementById('capital').value);
+            const riskPerc = parseFloat(document.getElementById('riskPerc').value);
+            const entry = parseFloat(document.getElementById('entry').value);
+            const stop = parseFloat(document.getElementById('stop').value);
+            
+            // 1. Dinero a perder
+            const riskCash = capital * (riskPerc / 100);
+            
+            // 2. Distancia al Stop (%)
+            const distPerc = Math.abs(stop - entry) / entry;
+
+            // 3. Tamaño de posición en USD
+            const posSizeUSD = riskCash / distPerc;
+
+            // 4. Lote en BTC
+            const lotBTC = posSizeUSD / entry;
+
+            // Mostrar resultados
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('resRiskCash').innerText = `$${riskCash.toFixed(2)}`;
+            document.getElementById('resPosSize').innerText = `$${posSizeUSD.toFixed(2)}`;
+            document.getElementById('resLot').innerText = `${lotBTC.toFixed(5)} BTC`;
+        }
+    </script>
+</body>
+</html>
