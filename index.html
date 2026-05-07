@@ -3,92 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Risk Master</title>
+    <title>Crypto Risk Master Pro</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535032.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo para los botones seleccionados */
+        .btn-active {
+            @apply ring-4 ring-blue-400 bg-blue-700 !important;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700">
-        <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">📊 Risk Calculator Pro</h1>
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-xl border border-slate-700">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">📈 Risk Master Pro (BTC/ETH)</h1>
         
-        <div class="space-y-4">
+        <div class="bg-slate-700 p-4 rounded-xl mb-6 grid grid-cols-2 gap-4 items-center border border-slate-600">
             <div>
-                <label class="block text-sm text-slate-400">Capital Total (USDT)</label>
-                <input type="number" id="capital" value="1000" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm text-slate-400">% Riesgo</label>
-                    <input type="number" id="riskPerc" value="1" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400">Operación</label>
-                    <select id="side" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
-                        <option value="short">SHORT (Venta)</option>
-                        <option value="long">LONG (Compra)</option>
-                    </select>
+                <label class="block text-sm text-slate-400 mb-1">Elegir Activo</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnBTC" onclick="selectAsset('BTC')" class="bg-slate-600 font-bold py-2 rounded-lg transition-all btn-active">BTC</button>
+                    <button id="btnETH" onclick="selectAsset('ETH')" class="bg-slate-600 font-bold py-2 rounded-lg transition-all">ETH</button>
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm text-slate-400">Precio Entrada</label>
-                    <input type="number" id="entry" value="82193" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400">Stop Loss</label>
-                    <input type="number" id="stop" value="84000" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none">
-                </div>
+            <div>
+                <button onclick="fetchCurrentPrices()" class="w-full bg-slate-600 hover:bg-blue-600 font-bold py-2 rounded-lg mt-6 flex items-center justify-center gap-2">
+                    <span id="priceLoader" class="hidden">⌛</span> 🔄 Actualizar Precio
+                </button>
             </div>
-
-            <button onclick="calculate()" class="w-full bg-blue-600 hover:bg-blue-500 transition-colors font-bold py-3 rounded-lg mt-4">
-                CALCULAR ENTRADA
-            </button>
         </div>
 
-        <div id="results" class="hidden mt-8 space-y-3 border-t border-slate-700 pt-6">
-            <div class="flex justify-between">
-                <span class="text-slate-400">Dinero en riesgo:</span>
-                <span id="resRiskCash" class="font-bold text-red-400">--</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label class="block text-sm text-slate-400">Capital Total (USDT)</label>
+                <input type="number" id="capital" value="1000" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none text-lg">
             </div>
-            <div class="flex justify-between">
-                <span class="text-slate-400">Tamaño Posición (USD):</span>
-                <span id="resPosSize" class="font-bold text-blue-300">--</span>
+            <div>
+                <label class="block text-sm text-slate-400">% Riesgo</label>
+                <input type="number" id="riskPerc" value="1" step="0.1" class="w-full bg-slate-700 border-none rounded-lg p-3 mt-1 outline-none text-lg">
             </div>
-            <div class="flex justify-between text-lg">
-                <span class="text-slate-400">Lote (BTC):</span>
-                <span id="resLot" class="font-bold text-green-400">--</span>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Operación</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnShort" onclick="selectSide('short')" class="bg-slate-600 font-bold py-2.5 rounded-lg btn-active">Venta (SHORT)</button>
+                    <button id="btnLong" onclick="selectSide('long')" class="bg-slate-600 font-bold py-2.5 rounded-lg">Compra (LONG)</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400">Mi Precio de Entrada (USD)</label>
+                <input type="number" id="entryPrice" class="w-full bg-slate-700 border border-blue-600 rounded-lg p-3 mt-1 outline-none text-lg text-blue-300 font-bold" placeholder="Cargando precio...">
+            </div>
+        </div>
+
+        <div class="bg-slate-700 p-4 rounded-xl mb-6 border border-slate-600">
+            <label class="block text-sm text-slate-400 mb-2">Apalancamiento / Estrategia (Determina el Stop Máximo)</label>
+            <div class="grid grid-cols-3 gap-3">
+                <button id="btn50x" onclick="selectLeverage(50)" class="bg-slate-600 p-3 rounded-lg text-center hover:bg-slate-500 transition-colors btn-active">
+                    <div class="font-bold text-lg">50x</div>
+                    <div class="text-xs text-slate-300">Scalp (5m)</div>
+                </button>
+                <button id="btn25x" onclick="selectLeverage(25)" class="bg-slate-600 p-3 rounded-lg text-center hover:bg-slate-500 transition-colors">
+                    <div class="font-bold text-lg">25x</div>
+                    <div class="text-xs text-slate-300">Intra (1h-4h)</div>
+                </button>
+                <button id="btn5x" onclick="selectLeverage(5)" class="bg-slate-600 p-3 rounded-lg text-center hover:bg-slate-500 transition-colors">
+                    <div class="font-bold text-lg">5x</div>
+                    <div class="text-xs text-slate-300">Swing (4h-1D)</div>
+                </button>
+            </div>
+        </div>
+
+        <button onclick="calculate()" class="w-full bg-green-600 hover:bg-green-500 transition-colors font-bold text-xl py-4 rounded-xl mt-2 shadow-lg">
+            CALCULAR ESTRATEGIA
+        </button>
+
+        <div id="results" class="hidden mt-8 space-y-4 border-t border-slate-700 pt-6">
+            <div class="bg-slate-900/50 p-4 rounded-lg flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xl">
+                    <span class="text-slate-400">Abrir Posición de (USD):</span>
+                    <span id="resPosSize" class="font-bold text-blue-300">--</span>
+                </div>
+                <div class="flex justify-between items-center text-2xl">
+                    <span class="text-slate-400">Cantidad (BTC/ETH):</span>
+                    <span id="resLot" class="font-bold text-white bg-blue-600 px-3 py-1 rounded-md">--</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950/40 p-4 rounded-lg border border-red-700 space-y-2">
+                <div class="flex justify-between font-bold text-xl text-red-200">
+                    <span>⛔ Stop Loss MÁXIMO (USD):</span>
+                    <span id="resStop">--</span>
+                </div>
+                <p class="text-xs text-red-400">Si el precio toca este nivel, pierdes exactamente el <span id="resRiskOut">--</span> de tu capital y la posición es liquidada al 100%. Debes poner tu Stop Loss técnico **antes** de este precio.</p>
             </div>
         </div>
     </div>
 
     <script>
+        // Configuración Global de la API
+        const symbols = {
+            'BTC': { 'base': 'BTCUSDT', 'price': 0 },
+            'ETH': { 'base': 'ETHUSDT', 'price': 0 }
+        };
+        
+        // Estado inicial de la App
+        let currentAsset = 'BTC';
+        let currentSide = 'short';
+        let currentLeverage = 50;
+
+        // --- Funciones de Interfaz ---
+        function selectAsset(asset) {
+            currentAsset = asset;
+            document.getElementById('btnBTC').classList.toggle('btn-active', asset === 'BTC');
+            document.getElementById('btnETH').classList.toggle('btn-active', asset === 'ETH');
+            updateEntryPriceInput();
+        }
+
+        function selectSide(side) {
+            currentSide = side;
+            document.getElementById('btnShort').classList.toggle('btn-active', side === 'short');
+            document.getElementById('btnLong').classList.toggle('btn-active', side === 'long');
+        }
+
+        function selectLeverage(lev) {
+            currentLeverage = lev;
+            document.getElementById('btn50x').classList.toggle('btn-active', lev === 50);
+            document.getElementById('btn25x').classList.toggle('btn-active', lev === 25);
+            document.getElementById('btn5x').classList.toggle('btn-active', lev === 5);
+        }
+
+        function updateEntryPriceInput() {
+            const price = symbols[currentAsset].price;
+            document.getElementById('entryPrice').value = price ? price.toFixed(2) : '';
+        }
+
+        // --- Hito 2: Conexión con la API Real (Binance) ---
+        async function fetchCurrentPrices() {
+            const loader = document.getElementById('priceLoader');
+            loader.classList.remove('hidden');
+            
+            try {
+                // Traemos los dos precios a la vez para máxima eficiencia
+                const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT"]');
+                const data = await response.json();
+                
+                // Mapear los resultados
+                data.forEach(item => {
+                    if (item.symbol === 'BTCUSDT') symbols.BTC.price = parseFloat(item.price);
+                    if (item.symbol === 'ETHUSDT') symbols.ETH.price = parseFloat(item.price);
+                });
+
+                updateEntryPriceInput(); // Actualizar el input actual
+            } catch (error) {
+                alert("Error cargando los precios. Revisa tu conexión.");
+                console.error(error);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // --- Lógica Matemática Avanzada ---
         function calculate() {
-            // Obtener valores
             const capital = parseFloat(document.getElementById('capital').value);
             const riskPerc = parseFloat(document.getElementById('riskPerc').value);
-            const entry = parseFloat(document.getElementById('entry').value);
-            const stop = parseFloat(document.getElementById('stop').value);
-            
-            // 1. Dinero a perder
-            const riskCash = capital * (riskPerc / 100);
-            
-            // 2. Distancia al Stop (%)
-            const distPerc = Math.abs(stop - entry) / entry;
+            const entry = parseFloat(document.getElementById('entryPrice').value);
+            const leverage = currentLeverage;
+            const side = currentSide;
 
-            // 3. Tamaño de posición en USD
-            const posSizeUSD = riskCash / distPerc;
+            if (!entry || isNaN(entry)) {
+                alert("Primero carga el precio real o escribe tu entrada.");
+                return;
+            }
 
-            // 4. Lote en BTC
-            const lotBTC = posSizeUSD / entry;
+            // --- TRUCO MATEMÁTICO DE SEGURIDAD ---
+            // La única forma de que un apalancamiento dicte un Stop Loss
+            // es si decides que la liquidación al 100% (hit a 100% de margen)
+            // coincida exactamente con tu riesgo del % de la cuenta.
 
-            // Mostrar resultados
+            // 1. Dinero a perder (riesgo real en $)
+            const riskUSD = capital * (riskPerc / 100);
+
+            // 2. ¿Dónde está la liquidación (Stop Máximo)?
+            // El 100% de movimiento en el margen ocurre cuando el precio
+            // del mercado se mueve (100 / Apalancamiento)%.
+            const maxDistPerc = (100 / leverage) / 100; // e.g., 50x es 0.02 (2%)
+
+            // 3. Calcular el precio del Stop Máximo (ZONA DE LIQUIDACIÓN)
+            let maxStopPrice;
+            if (side === 'short') {
+                maxStopPrice = entry * (1 + maxDistPerc); // En Short, el stop está arriba
+            } else {
+                maxStopPrice = entry * (1 - maxDistPerc); // En Long, el stop está abajo
+            }
+
+            // 4. Calcular el Tamaño de la Posición en USD
+            // Para que este cálculo de stop funcione, el valor total debe ser:
+            // PosSize = MargenUsado * Apalancamiento. Si MargenUsado = riskUSD...
+            const posSizeUSD = riskUSD * leverage;
+
+            // 5. Lote en el activo (BTC/ETH)
+            const lotAsset = posSizeUSD / entry;
+
+            // --- Mostrar Resultados ---
             document.getElementById('results').classList.remove('hidden');
-            document.getElementById('resRiskCash').innerText = `$${riskCash.toFixed(2)}`;
+            
+            // Visuales Pro
             document.getElementById('resPosSize').innerText = `$${posSizeUSD.toFixed(2)}`;
-            document.getElementById('resLot').innerText = `${lotBTC.toFixed(5)} BTC`;
+            document.getElementById('resLot').innerText = `${lotAsset.toFixed(4)} ${currentAsset}`;
+            
+            // Visuales de Seguridad (Red Zone)
+            const stopLabel = document.getElementById('resStop');
+            stopLabel.innerText = `$${maxStopPrice.toFixed(2)}`;
+            stopLabel.className = `font-bold ${side === 'short' ? 'text-red-300' : 'text-green-300'}`;
+            
+            document.getElementById('resRiskOut').innerText = `${riskPerc}%`;
         }
+
+        // Cargar precios automáticamente al abrir
+        fetchCurrentPrices();
     </script>
 </body>
 </html>
